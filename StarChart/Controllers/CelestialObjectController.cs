@@ -15,42 +15,51 @@ namespace StarChart.Controllers
             _context = context;
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id:int}", Name = "GetById")]
         public IActionResult GetById (int Id)
         {
-            var Satellites = _context.CelestialObjects.FirstOrDefault(i => i.OrbitedObjectId == Id);
+            var CelestialObject = _context.CelestialObjects.Find(Id);
 
-            if (Satellites != null )
+            if (CelestialObject == null )
             {
-                return Ok(Satellites);
+                return NotFound();
             }
             else
             {
-                return NotFound();
+                CelestialObject.Satellites = _context.CelestialObjects.Where(e => e.OrbitedObjectId == Id).ToList();
+                return Ok(CelestialObject);
             }
         }
 
         [HttpGet("{name}")]
         public IActionResult GetByName(string name)
         {
-            var Satellites = _context.CelestialObjects.FirstOrDefault(n => n.Name == name);
+            var CelestialObject = _context.CelestialObjects.Where(n => n.Name == name).ToList();
 
-            if(Satellites != null)
-            {
-                return Ok(name);
-            }
-            else
+            if(!CelestialObject.Any())
             {
                 return NotFound();
             }
+
+            foreach(var celestialObject in CelestialObject)
+            {
+                celestialObject.Satellites = _context.CelestialObjects.Where(e => e.OrbitedObjectId == celestialObject.Id).ToList();
+            }
+            return Ok(CelestialObject);
+
         }
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            var Satellites = _context.CelestialObjects.ToList();
+            var celestialObjects = _context.CelestialObjects.ToList();
 
-            return Ok(Satellites);
+            foreach(var celestialObject in celestialObjects)
+            {
+                celestialObject.Satellites = _context.CelestialObjects.Where(e => e.OrbitedObjectId == celestialObject.Id).ToList();
+            }
+
+            return Ok(celestialObjects);
         }
 
     }
